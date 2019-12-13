@@ -1,0 +1,63 @@
+version: "3"
+networks:
+  myapp:
+    external: true
+services:
+  events-api:
+    image: orensimple/api:0.0.11
+    depends_on:
+      - myapp-db
+      - myapp-flyway
+    ports:
+      - "8088:8088"
+    networks:
+      - myapp
+
+  events-reminder:
+    image: orensimple/reminder:0.0.8
+    depends_on:
+      - myapp-rabbitmq
+      - events-api
+    networks:
+      - myapp
+
+  events-scheduler:
+    image: orensimple/scheduler:0.0.10
+    depends_on:
+      - myapp-rabbitmq
+      - events-reminder
+    networks:
+      - myapp
+
+  # Run the DB
+  myapp-db:
+    image: postgres:10.11
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=db-user
+      - POSTGRES_PASSWORD=db-password
+    networks:
+      - myapp
+
+  # Apply migrations to the DB
+  myapp-flyway:
+    image: boxfuse/flyway
+    volumes:
+      - ./db/migration:/flyway/sql
+    command: -url=jdbc:postgresql://myapp-db/events -user=db-user -password=db-password migrate
+    depends_on:
+      - myapp-db
+    networks:
+      - myapp
+
+  myapp-rabbitmq:
+    image: "rabbitmq:3-management"
+    hostname: "rabbit"
+    networks:
+      - myapp
+    ports:
+      - "15672:15672"
+      - "5672:5672"
