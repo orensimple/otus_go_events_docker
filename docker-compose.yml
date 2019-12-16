@@ -4,7 +4,7 @@ networks:
     external: true
 services:
   events-api:
-    image: orensimple/api:0.0.11
+    image: orensimple/api:0.0.12
     depends_on:
       - myapp-db
       - myapp-flyway
@@ -14,7 +14,7 @@ services:
       - myapp
 
   events-reminder:
-    image: orensimple/reminder:0.0.8
+    image: orensimple/reminder:0.0.9
     depends_on:
       - myapp-rabbitmq
       - events-api
@@ -22,7 +22,7 @@ services:
       - myapp
 
   events-scheduler:
-    image: orensimple/scheduler:0.0.10
+    image: orensimple/scheduler:0.0.11
     depends_on:
       - myapp-rabbitmq
       - events-reminder
