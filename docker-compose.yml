@@ -25,7 +25,7 @@ services:
       - myapp
 
   events-scheduler:
-    image: orensimple/scheduler:0.0.14
+    image: orensimple/scheduler:0.0.17
     depends_on:
       - myapp-rabbitmq
       - events-reminder
