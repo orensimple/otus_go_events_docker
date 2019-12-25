@@ -4,28 +4,33 @@ networks:
     external: true
 services:
   events-api:
-    image: orensimple/api:0.0.12
+    image: orensimple/api:0.0.13
     depends_on:
       - myapp-db
       - myapp-flyway
     ports:
       - "8088:8088"
+      - "9110:9110"
     networks:
       - myapp
 
   events-reminder:
-    image: orensimple/reminder:0.0.9
+    image: orensimple/reminder:0.0.13
     depends_on:
       - myapp-rabbitmq
       - events-api
+    ports:
+      - "9130:9130"
     networks:
       - myapp
 
   events-scheduler:
-    image: orensimple/scheduler:0.0.11
+    image: orensimple/scheduler:0.0.13
     depends_on:
       - myapp-rabbitmq
       - events-reminder
+    ports:
+      - "9120:9120"  
     networks:
       - myapp
 
@@ -61,3 +66,46 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+
+  prom:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitor/prometheus.yml:/etc/prometheus/prometheus.yml
+    command: "--config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus"
+    networks:
+      - myapp
+    ports:
+      - 9090:9090
+    depends_on:
+      - exporter
+      - pg-exporter
+
+  exporter:
+    image: prom/node-exporter:latest
+    networks:
+      - myapp
+    ports:
+      - "9100:9100"
+
+  pg-exporter:
+    image: wrouesnel/postgres_exporter:latest
+    environment:
+      - DATA_SOURCE_NAME=postgresql://db-user:db-password@myapp-db:5432/events?sslmode=disable
+    volumes:
+      - ./postgres_exporter/queries.yaml:/queries.yaml
+    command: "--extend.query-path=/queries.yaml"
+    networks:
+      - myapp
+    ports:
+      - 9187:9187
+    depends_on:
+      - exporter
+
+  grafana:
+    image: grafana/grafana
+    networks:
+      - myapp
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prom

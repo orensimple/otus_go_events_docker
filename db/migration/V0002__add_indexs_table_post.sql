@@ -1,1 +1,1 @@
-CREATE INDEX owner_start_time_idx ON public.events USING btree (owner, start_time);
+CREATE INDEX owner_start_time_idx ON public.events (owner, start_time);
