@@ -1,4 +1,6 @@
 # otus_events_docker
 
-docker network create front_net
+``
+docker network create myapp
 docker-compose up
+``
