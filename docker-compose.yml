@@ -52,7 +52,7 @@ services:
     image: boxfuse/flyway
     volumes:
       - ./db/migration:/flyway/sql
-    command: -url=jdbc:postgresql://myapp-db/events -user=db-user -password=db-password migrate
+    command: -url=jdbc:postgresql://myapp-db/events -user=db-user -password=db-password -connectRetries=60 migrate
     depends_on:
       - myapp-db
     networks:
